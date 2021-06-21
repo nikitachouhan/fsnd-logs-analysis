@@ -12,58 +12,49 @@ def print_articles():
     cr = db.cursor()
     cr.execute("select articles.title, count(*) as views \
                 from articles, log \
-                where log.path = concat('/article/', articles.slug) \
+                where log.path = '/article/' || articles.slug \
                 group by articles.title \
                 order by views desc Limit 3")
     results = cr.fetchall()
     print("\nQuery Result 1:- The most popular three articles of all time \n")
     for row in results:
-        print("{} - {} views".format(row[0], row[1]))
+        print(f"{row[0]} - {row[1]} views")
     db.close()
 
 
 def print_authors():
     db = psycopg2.connect(database=DB_NAME)
     cr = db.cursor()
-    cr.execute("select authors.name, count(*) as views \
-                from (select * \
-                      from articles,log \
-                      where log.path = concat('/article/', articles.slug) \
-                      ) as popular_articles, authors \
-                where authors.id = popular_articles.author \
+    cr.execute("select authors.name, count(authors.name) as views \
+                from log, \
+                    articles JOIN authors ON authors.id = articles.author \
+                where log.path = '/article/' || articles.slug \
                 group by authors.name \
                 order by views desc")
     results = cr.fetchall()
     print("\nQuery Result 2:- The most popular article authors of all time \n")
     for row in results:
-        print("{} - {} views".format(row[0], row[1]))
+        print(f"{row[0]} - {row[1]} views")
     db.close()
 
 
 def print_request_error_day():
     db = psycopg2.connect(database=DB_NAME)
     cr = db.cursor()
-    cr.execute("select date_log, trunc(percentage_error,2) \
-                from (select date_log, ((error_count*100.0)/total_count) \
-                                        as percentage_error \
-                    from (select date(time) as date_log, \
-                            count(case when status like '%404%' then 1 end) \
-                                 as error_count, \
-                            count(*) as total_count \
-                            from log \
-                            group by date(time) \
-                        ) as error_results \
-                ) as percentage_results \
-                where percentage_error > 1")
+    cr.execute("select date(time) as log_date, \
+                        trunc(count(case when status like '%404%' then 1 end) \
+                            *100.0 /count(*) ,2) \
+                        as percentage_error \
+                from log \
+                group by date(time) \
+                having count(case when status like '%404%' then 1 end) \
+                            *100.0 /count(*) >1")
     results = cr.fetchall()
     print("\nQuery Result 3:- More than 1% of requests lead to errors \n")
-    format_string = '{} {},{} - {}% errors'
     for row in results:
-        month = row[0].strftime("%B")
-        day = row[0].strftime("%d")
-        year = row[0].strftime("%Y")
+        error_date = row[0]
         error_percent = row[1]
-        print(format_string.format(month, day, year, error_percent))
+        print(f"{error_date:%B %d,%Y} - {error_percent}% errors")
     db.close()
 
 
