@@ -9,6 +9,7 @@
 - [Repository data](#repository-data)
 - [Install](#install)
   - [Using Vagrant virtual machine](#using-vagrant-virtual-machine)
+- [Updates post mentor review](#updates-post-mentor-review)
 
 ## Description
 
@@ -55,4 +56,13 @@ As a prerequisite, installation steps are provided by udacity.
   ❯ vagrant@vagrant:/vagrant/tool$ python logs_analysis.py
   ```
   
-
+## Updates post mentor review
+- str.format is replaced with f-strings in print function. f-strings are supported from python 3.6 version.
+  To run the python file log_analysis.py make sure to install python-3.6. The configurations mentioned above provides python-3.5/python-2.7 by default.
+  
+  ```sh
+  ❯ vagrant@vagrant:~$ cd /vagrant/tool
+  Install psycopg2 library to run with python3.6
+  ❯ vagrant@vagrant:/vagrant/tool$ pip install psycopg2-binary
+  ❯ vagrant@vagrant:/vagrant/tool$ python3.6 logs_analysis.py
+  ```
